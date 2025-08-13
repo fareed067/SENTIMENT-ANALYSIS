@@ -1,0 +1,45 @@
+import nltk
+from nltk.corpus import movie_reviews
+import random
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report
+
+# Download dataset from NLTK
+nltk.download('movie_reviews')
+
+# Load and shuffle dataset
+documents = [(list(movie_reviews.words(fileid)), category)
+             for category in movie_reviews.categories()
+             for fileid in movie_reviews.fileids(category)]
+random.shuffle(documents)
+
+# Prepare data
+texts = [" ".join(words) for words, label in documents]
+labels = [label for words, label in documents]
+
+# Split data
+train_size = int(0.8 * len(texts))
+X_train, X_test = texts[:train_size], texts[train_size:]
+y_train, y_test = labels[:train_size], labels[train_size:]
+
+# Convert text to features
+vectorizer = CountVectorizer()
+X_train_vec = vectorizer.fit_transform(X_train)
+X_test_vec = vectorizer.transform(X_test)
+
+# Train model
+model = MultinomialNB()
+model.fit(X_train_vec, y_train)
+
+# Predictions
+y_pred = model.predict(X_test_vec)
+
+# Evaluation
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Test on new text
+sample_texts = ["I love this movie!", "This was the worst film I have ever seen."]
+sample_vec = vectorizer.transform(sample_texts)
+print("\nSample Predictions:", model.predict(sample_vec))
